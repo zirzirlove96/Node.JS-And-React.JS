@@ -3,7 +3,7 @@ const app = express() //function을 이용하여 새로운 express 앱을 만들
 const port = 5000
 
 const mongoose = require('mongoose')
-mongoose.connect('mongodb+srv://root:root@cluster1.txo16.mongodb.net/<dbname>?retryWrites=true&w=majority',{
+mongoose.connect('mongodb+srv://root:<password>@cluster1.txo16.mongodb.net/<dbname>?retryWrites=true&w=majority',{
   useNewUrlParser:true, useUnifiedTopology: true, useCreateIndex:true, useFindAndModify: false
 }).then(()=>console.log('MongoDB Connected'))
   .catch(err => console.log(err))
@@ -11,8 +11,6 @@ mongoose.connect('mongodb+srv://root:root@cluster1.txo16.mongodb.net/<dbname>?re
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
-
-
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
