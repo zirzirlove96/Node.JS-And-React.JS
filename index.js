@@ -7,6 +7,7 @@ const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const config = require('./config/key')
 const cookieParser = require('cookie-parser');
+const {auth} = require('./middleware/auth');
 
 //client에서 오는 정보들을 분석해서 가져오게 한다.
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -23,7 +24,7 @@ app.get('/', (req, res) => {
 })
 
 /**회원가입**/
-app.post('/register', (req, res) => {
+app.post('/api/user/register', (req, res) => {
   //회원 가입 할때 필요한 정보들을 client에서 가져오면
   //그것들을 데이터 베이스에 넣어준다.
   //bodyparser로 인해 json형식으로 데이터를 가져온다.
@@ -39,7 +40,7 @@ app.post('/register', (req, res) => {
 })
 
 /**로그인 */
-app.post('/login', (req, res) => {
+app.post('/api/user/login', (req, res) => {
   //이메일 정보 데이터 베이스에 있는지 확인하는 작업
   User.findOne({ email: req.body.email }, (err, user) => {
     if (!user) {//user가 비어 있다면 없는 것이다.
@@ -65,7 +66,7 @@ app.post('/login', (req, res) => {
         if (err) return res.status(400).send(err);
 
         //토큰을 쿠키에 저장한다.
-        res.cookie('x_auth', user.token)
+        res.cookie("x_auth", user.token)
           .status(200)
           .json({ loginSuccess: true, userId: user._id });
 
@@ -73,10 +74,37 @@ app.post('/login', (req, res) => {
     });
   });
 
-  
+
 });
 
+/**권한 확인 */
+app.get('/api/user/auth', auth ,(req,res)=>{
+  //인증절차 
 
+    res.status(200).json({  
+      _id : req.user._id,
+      //role : 0 -> 일반유저 :1 -> 관리자
+      isAdmin : req.user.role === 0 ? "일반" : "관리자",
+      isAuth: true,
+      email: req.user.email,
+      name: req.user.name,
+      lastname: req.user.lastname,
+      role: req.user.role
+    });
+});
+
+/**로그아웃 */
+app.get('/api/user/logout', auth, (req,res)=>{
+
+  //사용자를 찾아서 token을 지우기 때문에 update로 해준다.
+  User.findOneAndUpdate({_id:req.user._id}, {token: ""}, (err,user)=>{
+    if(err) return res.json({success: false, message: err});
+    return res.status(200).send({
+      success:true
+    });
+  });
+
+});
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
